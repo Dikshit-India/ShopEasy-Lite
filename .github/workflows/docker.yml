@@ -1,0 +1,36 @@
+name: ShopEasy Docker CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: docker build -t shopeasy-lite:v1 .
+
+      - name: Test Docker container
+        run: |
+          docker run --rm shopeasy-lite:v1 > output.txt
+          cat output.txt
+          grep -q "Total Price: 52500" output.txt
+
+      - name: Save Docker image
+        run: docker save shopeasy-lite:v1 -o shopeasy-lite.tar
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: shopeasy-docker-image
+          path: shopeasy-lite.tar
